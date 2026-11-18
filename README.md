@@ -55,9 +55,9 @@ Também é possível clicar direto em LL < 50 / LL > 50 e no símbolo, sem usar 
 
 ### No celular
 
-A tabela rola na horizontal e o resultado fica no topo. Um atalho no canto da tela leva ao resultado quando ele sai de vista.
+Em telas estreitas a tabela vira um passo a passo: uma pergunta por vez, com as escolhas anteriores numa lista numerada (toque numa delas para voltar dali). A carta de plasticidade aparece em largura total no passo dos finos.
 
-<img src="docs/screenshots/06-mobile-azul.png" alt="Versão para celular" width="320">
+<img src="docs/screenshots/06-celular.png" alt="Versão para celular, com o passo a passo" width="320">
 
 ## Recursos
 
@@ -67,6 +67,7 @@ A tabela rola na horizontal e o resultado fica no topo. Um atalho no canto da te
 - Carta de plasticidade de Casagrande interativa (LL e IP ou LL e LP, clique ou arraste)
 - A carta serve também para os finos dos solos grossos (GM, GC, SM, SC e fronteiras)
 - Calculadora de Cu e Cc
+- No celular, modo passo a passo com a carta em largura total
 - Painel de resultado com símbolo, nome do grupo, designação típica e critérios usados
 - Tema claro e escuro automático
 - Funciona offline (só a fonte vem da internet), sem dependências nem etapa de build

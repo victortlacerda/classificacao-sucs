@@ -1,5 +1,12 @@
 # Changelog
 
+## Não lançado
+
+- No celular (até 700 px): modo passo a passo no lugar da tabela, com a carta em largura total
+- Rótulos da carta de plasticidade maiores quando o gráfico fica estreito
+- Cor de destaque azul (rgb 21, 102, 209)
+- Concordância de gênero nos textos de graduação das areias
+
 ## 1.0.0 - 2026-11-18
 
 - Tabela de classificação SUCS clicável, com caminho numerado e opções descartadas apagadas
