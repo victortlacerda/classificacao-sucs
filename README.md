@@ -6,7 +6,7 @@ Ferramenta de geotecnia que transforma a **tabela de classificação do SUCS** (
 
 **Demonstração online:** https://victortlacerda.github.io/classificacao-sucs/
 
-![Areia mal graduada com argila (SP-SC), com o caminho marcado na tabela](docs/screenshots/03-areia-sp-sc.png)
+![Areia mal graduada com argila (SP-SC), com o caminho marcado na tabela](docs/screenshots/03-areia-sp-sc-azul.png)
 
 ## Por que usar
 
@@ -34,7 +34,7 @@ Solos grossos (mais de 50% retido na #200), finos (mais de 50% passa na #200) ou
 | > 12% | GM, GC, SM, SC (ou GC-GM, SC-SM com 4 ≤ IP ≤ 7 acima da linha A) |
 | 5% a 12% | GW-GM, GW-GC, GP-GM, GP-GC, SW-SM, SW-SC, SP-SM, SP-SC |
 
-![Pedregulho bem graduado (GW)](docs/screenshots/02-pedregulho-gw.png)
+![Pedregulho bem graduado (GW)](docs/screenshots/02-pedregulho-gw-azul.png)
 
 ### 3. Solos finos
 
@@ -48,8 +48,8 @@ Também é possível clicar direto em LL < 50 / LL > 50 e no símbolo, sem usar 
 
 <table>
 <tr>
-<td width="50%"><img src="docs/screenshots/04-argila-ch-carta.png" alt="Argila de alta plasticidade (CH) pela carta"><br><sub><b>CH</b>: classificado pela carta de plasticidade</sub></td>
-<td width="50%"><img src="docs/screenshots/05-cl-ml.png" alt="Caso de fronteira CL-ML"><br><sub><b>CL-ML</b>: caso de fronteira</sub></td>
+<td width="50%"><img src="docs/screenshots/04-argila-ch-carta-azul.png" alt="Argila de alta plasticidade (CH) pela carta"><br><sub><b>CH</b>: classificado pela carta de plasticidade</sub></td>
+<td width="50%"><img src="docs/screenshots/05-cl-ml-azul.png" alt="Caso de fronteira CL-ML"><br><sub><b>CL-ML</b>: caso de fronteira</sub></td>
 </tr>
 </table>
 
@@ -57,7 +57,7 @@ Também é possível clicar direto em LL < 50 / LL > 50 e no símbolo, sem usar 
 
 A tabela rola na horizontal e o resultado fica no topo. Um atalho no canto da tela leva ao resultado quando ele sai de vista.
 
-<img src="docs/screenshots/06-mobile.png" alt="Versão para celular" width="320">
+<img src="docs/screenshots/06-mobile-azul.png" alt="Versão para celular" width="320">
 
 ## Recursos
 
