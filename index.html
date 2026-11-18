@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Classificação de solos pelo SUCS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f2f4f3;--panel:#fff;--ink:#13232b;--mute:#5d7078;--grid:#d5dddb;--hatch:#7b8f97;--accent:#e0382f;--zone:#e8eeed;--line:#cbd5d3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10181c;--panel:#17232a;--ink:#e3ecee;--mute:#93a6ad;--grid:#2a3b43;--hatch:#6f858d;--accent:#ff6b5e;--zone:#1d2c33;--line:#2f424b}}
+:root[data-theme="dark"]{--bg:#10181c;--panel:#17232a;--ink:#e3ecee;--mute:#93a6ad;--grid:#2a3b43;--hatch:#6f858d;--accent:#ff6b5e;--zone:#1d2c33;--line:#2f424b}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "IBM Plex Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1560px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:22px;font-weight:600;margin:0 0 4px}
+.lead{margin:0 0 18px;color:var(--mute);max-width:80ch}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+@media(max-width:1440px){.layout{grid-template-columns:1fr}.side{order:-1}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.side{position:sticky;top:12px;display:flex;flex-direction:column;gap:14px}
+@media(max-width:1440px){.side{position:static}}
+.tw{overflow-x:auto;padding:12px}
+.stage{position:relative;width:max-content;margin:0 auto}
+#path{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:3}
+table{border-collapse:collapse;font-size:13px;line-height:1.35;min-width:1080px}
+th{font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--mute);text-align:left;padding:8px;border:1px solid var(--line);background:var(--zone)}
+td{border:1px solid var(--line);padding:6px 8px;vertical-align:middle;transition:opacity .25s,background-color .2s,box-shadow .2s}
+td.v{text-align:center;padding:8px 4px;width:44px}
+.vt{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block;white-space:nowrap}
+td.big .vt{font-size:19px;font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+td.sym{font-weight:600;font-size:15px;text-align:center;width:58px}
+td.des{width:290px}
+td.crit{width:250px}
+td.obs{width:260px;font-size:12.5px}
+td.h{text-align:center;font-weight:500}
+.oh{color:var(--mute);margin:0 0 4px}
+.opt{display:block;width:100%;text-align:left;font:inherit;font-size:12.5px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:5px 8px;margin:4px 0;cursor:pointer;transition:opacity .25s,background-color .2s,box-shadow .2s}
+.opt span{color:var(--mute)}
+[data-n]{cursor:pointer}
+[data-n]:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nx{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent)}
+.nx:hover{background:color-mix(in srgb,var(--accent) 8%,var(--panel))}
+.sel{background:color-mix(in srgb,var(--accent) 14%,var(--panel));box-shadow:inset 0 0 0 2px var(--accent);font-weight:600}
+td.sym.res{color:var(--accent);font-size:18px}
+.alt{opacity:.42}
+.alt:hover{opacity:.8}
+.off{opacity:.16;cursor:default}
+.opt.off,td.off{pointer-events:none}
+#chartcell{padding:10px 12px;vertical-align:top;width:520px}
+#chartcell.sel{background:var(--panel)}
+#chartcell.off{opacity:.25}
+#chartcell.off *{pointer-events:none}
+.ct{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 4px}
+.ct b{font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.ct small{color:var(--accent);font-weight:500}
+#chart{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+#chart text{font-family:inherit;fill:var(--ink)}
+.ci{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:6px;font-size:13px}
+.ci label{display:flex;gap:5px;align-items:center}
+.ci input[type=number]{width:70px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);text-align:right}
+.ci input:disabled{opacity:.6;background:var(--zone)}
+.ci input[type=radio]{accent-color:var(--accent)}
+.ro{margin:6px 0 0;font-size:12.5px;color:var(--mute)}
+.ro.warn{color:var(--accent)}
+.step{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin:0 0 4px}
+.prompt{font-size:16px;font-weight:500;margin:0}
+.calc{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.calc .row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.calc label{font-size:12.5px;color:var(--mute);display:flex;flex-direction:column;gap:2px}
+.calc input{width:100%;font:inherit;padding:5px 7px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);text-align:right}
+.calc p{margin:8px 0;font-size:13.5px}
+.btn{font:inherit;font-size:13.5px;padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.symbig{font-size:48px;font-weight:600;line-height:1.05;letter-spacing:-.02em;color:var(--accent)}
+.rname{font-size:17px;font-weight:600;margin:6px 0 2px}
+.rdes{color:var(--mute);margin:0 0 10px;font-size:13.5px}
+ol.trail{margin:0;padding-left:20px;font-size:13.5px}
+ol.trail li{margin:3px 0}
+.note{margin:10px 0 0;padding:8px 10px;border-left:3px solid var(--grid);background:var(--zone);font-size:13px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--mute);margin:10px 0 0}
+.legend i{display:inline-block;width:18px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:5px;border:1px solid var(--line)}
+.actions{display:flex;gap:8px;margin-top:12px}
+#chip{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:10;display:none;font:inherit;font-weight:600;padding:9px 14px;border-radius:999px;border:0;background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);cursor:pointer}
+#path .ln{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+#path .dot circle{fill:var(--accent);stroke:var(--panel);stroke-width:2.5}
+#path .dot text{fill:#fff;font:600 11px "IBM Plex Sans",system-ui,sans-serif;text-anchor:middle;dominant-baseline:central}
+#path .ring{fill:none;stroke:var(--accent);stroke-width:2.5}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='%23e0382f'/%3E%3Cpath%20fill='none'%20stroke='%23fff'%20stroke-width='2.2'%20stroke-linecap='round'%20stroke-linejoin='round'%20d='M7%2016h6l4-7h8M17%2016l3%207h5'/%3E%3Ccircle%20cx='7'%20cy='16'%20r='2.4'%20fill='%23fff'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+<h1>Classificação de solos pelo SUCS</h1>
+<p class="lead">Clique nas opções da tabela, da esquerda para a direita. Cada escolha marca o caminho e apaga as opções que deixam de valer. Para os finos, marque LL e IP na carta de plasticidade e a tabela segue sozinha. Clique de novo numa opção escolhida para voltar daquele ponto.</p>
+<div class="layout">
+  <div class="card tw"><div class="stage" id="stage">
+    <table id="tab" aria-label="Tabela de classificação SUCS"></table>
+    <svg id="path" aria-hidden="true"></svg>
+  </div>
+  <div class="legend"><span><i style="box-shadow:inset 0 0 0 2px var(--accent)"></i>Próximo passo</span><span><i style="background:color-mix(in srgb,var(--accent) 14%,var(--panel));border-color:var(--accent)"></i>Escolhido</span><span><i style="opacity:.4"></i>Alternativa (clique para trocar)</span><span><i style="opacity:.15"></i>Não se aplica mais</span></div>
+  </div>
+  <aside class="side">
+    <div class="card" id="stepcard">
+      <p class="step" id="stepn"></p>
+      <p class="prompt" id="prompt"></p>
+      <div class="calc" id="calc" hidden>
+        <div class="row">
+          <label>D10 (mm)<input id="d10" type="number" min="0" step="any"></label>
+          <label>D30 (mm)<input id="d30" type="number" min="0" step="any"></label>
+          <label>D60 (mm)<input id="d60" type="number" min="0" step="any"></label>
+        </div>
+        <p id="cuout">Opcional: informe os diâmetros para calcular Cu e Cc.</p>
+        <button class="btn pri" id="cuapply" disabled>Usar este resultado</button>
+      </div>
+    </div>
+    <div class="card" id="result" aria-live="polite"></div>
+  </aside>
+</div>
+</main>
+<button id="chip" type="button"></button>
+<script>
+const $=id=>document.getElementById(id);
+
+/* ---------- tabela ---------- */
+const DES={
+ GW:"Pedregulhos c/ areia, bem graduados, sem finos ou pouca quantidade de finos",
+ GP:"Pedregulhos c/ areia, mal graduados, sem finos ou pouca quantidade de finos",
+ GM:"Pedregulhos c/ silte, pedregulhos com silte e areia fina (finos não plásticos)",
+ GC:"Pedregulhos c/ argila, pedregulho c/ areia e argila (finos plásticos)",
+ SW:"Areias c/ pedregulho, sem finos ou poucos finos, bem graduadas",
+ SP:"Areias c/ pedregulho, sem finos ou poucos finos, mal graduadas",
+ SM:"Areias siltosas, misturas de areias e siltes",
+ SC:"Areias argilosas, misturas de areias e argilas",
+ ML:"Siltes inorgânicos e areias muito finas, pó de pedra, baixa plasticidade",
+ CL:"Argilas inorgânicas de baixa a média plasticidade",
+ OL:"Siltes orgânicos e suas misturas c/ argilas de baixa plasticidade",
+ MH:"Siltes inorgânicos, solos micáceos c/ areias muito finas",
+ CH:"Argilas inorgânicas de alta plasticidade",
+ OH:"Argilas orgânicas de média a alta plasticidade",
+ Pt:"Turfas"
+};
+const cells=(k,s,a)=>`<td class="sym" data-n="${k}" data-s="${s}"${a?" data-a":""} tabindex="0" role="button">${s}</td><td class="des" data-n="${k}">${DES[s]}</td>`;
+function coarse(L){
+  const g=L==="G",F=(t)=>t;
+  const cw=g?"Cu = D60/D10 &gt; 4; &nbsp;Cc = D30²/(D60·D10) entre 1 e 3":"Cu &gt; 6; &nbsp;Cc entre 1 e 3";
+  const lim=g?"4 ≤ IP ≤ 7":"4 &lt; IP &lt; 7";
+  let h="<tr>";
+  if(g)h+=`<td rowspan="8" class="v big" data-n="g:G"><span class="vt">Solos grossos</span></td><td rowspan="8" class="v" data-n="g:G" data-a tabindex="0" role="button"><span class="vt">+ 50% fica retida na #200</span></td>`;
+  h+=`<td rowspan="4" class="v" data-n="fr:${L}" data-a tabindex="0" role="button"><span class="vt">${g?"Pedregulhos +50%<br>fica retido na # nº 4":"Areias +50%<br>passa na # nº 4"}</span></td>`;
+  h+=cells(`gr:W@${L}`,L+"W")+`<td class="crit" data-n="gr:W@${L}" data-a>${cw}</td>`;
+  h+=`<td rowspan="2" class="obs"><div class="oh">Se % que passa na #200 for:</div>
+   <button class="opt" data-n="fi:lt5@${L}" data-a>&lt; 5% <span>→ GW, GP, SW, SP</span></button>
+   <button class="opt" data-n="fi:gt12@${L}" data-a>&gt; 12% <span>→ GM, GC, SM, SC</span></button>
+   <button class="opt" data-n="fi:512@${L}" data-a>5% ≤ % ≤ 12% <span>→ casos de fronteira</span></button></td></tr>`;
+  h+=`<tr>${cells(`gr:P@${L}`,L+"P")}<td class="crit" data-n="gr:P@${L}" data-a>Não obedecendo aos requisitos do grupo ${L}W</td></tr>`;
+  h+=`<tr>${cells(`at:M@${L}`,L+"M")}<td class="crit" data-n="at:M@${L}" data-a>Limites de Atterberg abaixo da linha A ou IP &lt; 4</td>
+   <td rowspan="2" class="obs"><button class="opt" data-n="at:CM@${L}" data-a>Acima da linha A, com ${lim}: <span>casos de fronteira que necessitam de 2 símbolos</span></button></td></tr>`;
+  h+=`<tr>${cells(`at:C@${L}`,L+"C")}<td class="crit" data-n="at:C@${L}" data-a>Limites de Atterberg acima da linha A ou IP &gt; 7</td></tr>`;
+  return h;
+}
+let T=`<tr><th colspan="3"></th><th>Símb.</th><th>Designações típicas</th><th>Critérios de classificação laboratorial</th><th>Observações</th></tr>`;
+T+=coarse("G")+coarse("S");
+T+=`<tr><td rowspan="6" class="v big" data-n="g:F"><span class="vt">Solos finos</span></td><td rowspan="6" class="v" data-n="g:F" data-a tabindex="0" role="button"><span class="vt">+ 50% passa na #200</span></td>
+ <td rowspan="3" class="v" data-n="ll:L" data-a tabindex="0" role="button"><span class="vt">Siltes e argilas<br>LL &lt; 50</span></td>${cells("fn:M@L","ML",1)}
+ <td rowspan="7" colspan="2" id="chartcell"></td></tr>
+ <tr>${cells("fn:C@L","CL",1)}</tr><tr>${cells("fn:O@L","OL",1)}</tr>
+ <tr><td rowspan="3" class="v" data-n="ll:H" data-a tabindex="0" role="button"><span class="vt">Siltes e argilas<br>LL &gt; 50</span></td>${cells("fn:M@H","MH",1)}</tr>
+ <tr>${cells("fn:C@H","CH",1)}</tr><tr>${cells("fn:O@H","OH",1)}</tr>
+ <tr><td colspan="2" class="h" data-n="g:Pt" data-a tabindex="0" role="button">Solos altamente orgânicos</td><td class="h">—</td>
+ <td class="sym" data-n="pt:1" data-s="Pt" data-a tabindex="0" role="button">Pt</td><td class="des" data-n="pt:1">Turfas ⇒ LL &gt; 300% e IP &gt; 100%</td></tr>`;
+$("tab").innerHTML=T;
+document.querySelectorAll("[data-a]").forEach(e=>{e.removeAttribute("data-a");e.dataset.a=1});
+document.querySelectorAll("td[data-n]").forEach(e=>{if(!e.hasAttribute("tabindex")){e.tabIndex=-1}});
+
+/* ---------- carta de plasticidade (do app Carta de Plasticidade de Casagrande) ---------- */
+$("chartcell").innerHTML=`<div class="ct"><b>Gráfico de plasticidade p/ solos finos</b><small id="ctx"></small></div>
+<svg id="chart" viewBox="0 0 760 500" role="img" aria-label="Carta de plasticidade"></svg>
+<div class="ci"><span><label><input type="radio" name="mode" value="ip" checked> LL e IP</label></span><span><label><input type="radio" name="mode" value="lp"> LL e LP</label></span>
+<label>LL <input id="ll" type="number" min="0" max="120" step="0.1"></label>
+<label>IP <input id="ip" type="number" min="0" max="80" step="0.1"></label>
+<label>LP <input id="lp" type="number" min="0" max="120" step="0.1" disabled></label></div>
+<p class="ro" id="ro">Informe LL e IP ou clique no gráfico.</p>`;
+const W=760,H=500,m={l:64,r:20,t:16,b:56},XM=100,YM=60;
+const X=v=>m.l+v/XM*(W-m.l-m.r), Y=v=>H-m.b-v/YM*(H-m.t-m.b);
+const A=ll=>0.73*(ll-20), U=ll=>0.9*(ll-8);
+const svg=$("chart");
+(function base(){
+  let s=`<defs><pattern id="hz" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="var(--hatch)" stroke-width="2"/></pattern></defs>`;
+  s+=`<polygon points="${X(0)},${Y(0)} ${X(20)},${Y(0)} ${X(25.48)},${Y(4)} ${X(0)},${Y(4)}" fill="url(#hz)" opacity=".55"/>`;
+  s+=`<polygon points="${X(0)},${Y(4)} ${X(25.48)},${Y(4)} ${X(29.59)},${Y(7)} ${X(0)},${Y(7)}" fill="var(--hatch)" opacity=".35"/>`;
+  for(let v=0;v<=XM;v+=10){s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${Y(0)}" y2="${Y(YM)}" stroke="var(--grid)"/><text x="${X(v)}" y="${Y(0)+20}" text-anchor="middle" font-size="13">${v}</text>`}
+  for(let v=0;v<=YM;v+=10){s+=`<line y1="${Y(v)}" y2="${Y(v)}" x1="${X(0)}" x2="${X(XM)}" stroke="var(--grid)"/><text x="${X(0)-10}" y="${Y(v)+4}" text-anchor="end" font-size="13">${v}</text>`}
+  s+=`<rect x="${X(0)}" y="${Y(YM)}" width="${X(XM)-X(0)}" height="${Y(0)-Y(YM)}" fill="none" stroke="var(--ink)"/>`;
+  for(const v of [30,50])s+=`<line x1="${X(v)}" x2="${X(v)}" y1="${Y(0)}" y2="${Y(YM)}" stroke="var(--ink)" stroke-width="1.2"/><text x="${X(v)+5}" y="${Y(YM)+14}" font-size="12" style="fill:var(--mute)">LL = ${v}</text>`;
+  s+=`<line x1="${X(20)}" y1="${Y(0)}" x2="${X(XM)}" y2="${Y(A(XM))}" stroke="var(--ink)" stroke-width="2"/>`;
+  s+=`<line x1="${X(16)}" y1="${Y(7)}" x2="${X(8+YM/.9)}" y2="${Y(YM)}" stroke="var(--mute)" stroke-width="1.2" stroke-dasharray="5 4"/>`;
+  s+=`<text transform="translate(${X(83)},${Y(A(83))+20}) rotate(${-Math.atan(0.73*(Y(0)-Y(YM))/YM/((X(XM)-X(0))/XM))*180/Math.PI})" font-size="12" text-anchor="middle">Linha A: IP = 0,73·(LL − 20)</text>`;
+  s+=`<text x="${X(70)}" y="${Y(U(70))-6}" font-size="11" style="fill:var(--mute)" transform="rotate(-48 ${X(70)} ${Y(U(70))-6})">Linha U</text>`;
+  const z=[[22,15,"CL","baixa plasticidade"],[40,27,"CL","média plasticidade"],[62,41,"CH","alta plasticidade"],[40,5,"ML / OL",""],[70,10,"MH / OH",""],[10,5.7,"CL-ML",""]];
+  for(const [l,i,t,d] of z)s+=`<text x="${X(l)}" y="${Y(i)}" font-size="${t==="CL-ML"?11:15}" font-weight="600" text-anchor="middle" style="fill:var(--mute)">${t}</text>`+(d?`<text x="${X(l)}" y="${Y(i)+15}" font-size="11" text-anchor="middle" style="fill:var(--mute)">${d}</text>`:"");
+  s+=`<text x="${X(10)}" y="${Y(1.1)}" font-size="11" font-weight="600" text-anchor="middle" style="paint-order:stroke;stroke:var(--panel);stroke-width:3px;fill:var(--ink)">Solos não coesivos</text>`;
+  s+=`<text x="${(X(0)+X(XM))/2}" y="${H-10}" text-anchor="middle" font-size="15" font-weight="500">Limite de liquidez, LL (%)</text>`;
+  s+=`<text transform="translate(16 ${(Y(0)+Y(YM))/2}) rotate(-90)" text-anchor="middle" font-size="15" font-weight="500">Índice de plasticidade, IP (%)</text>`;
+  s+=`<g id="pt" style="display:none"><line id="gx" stroke="var(--accent)" stroke-dasharray="4 4"/><line id="gy" stroke="var(--accent)" stroke-dasharray="4 4"/><circle id="ptc" r="8" fill="var(--accent)" stroke="var(--panel)" stroke-width="2.5"/></g>`;
+  svg.innerHTML=s;
+})();
+function chartSym(LL,IP){
+  const a=A(LL),acima=IP>=a;
+  if(acima&&IP>=4&&IP<=7)return "CL-ML";
+  if(acima&&IP>=4)return LL<50?"CL":"CH";
+  if(acima)return "ML";
+  return LL<50?"ML / OL":"MH / OH";
+}
+let mode="ip";
+function readPoint(){
+  const LL=parseFloat($("ll").value);let IP,LP,err=null;
+  if(mode==="ip"){IP=parseFloat($("ip").value);LP=LL-IP;$("lp").value=isFinite(LP)?+LP.toFixed(2):"";}
+  else{LP=parseFloat($("lp").value);IP=LL-LP;$("ip").value=isFinite(IP)?+IP.toFixed(2):"";}
+  if(!isFinite(LL)||!isFinite(IP))return {LL,IP,err:"empty"};
+  if(!(LL>0)||IP<0)err=mode==="lp"&&LP>LL?"LP não pode ser maior que LL (o IP ficaria negativo).":"Informe valores positivos para LL e IP.";
+  else if(IP>LL)err="IP não pode ser maior que LL (IP = LL − LP).";
+  else if(mode==="lp"&&LP<0)err="LP não pode ser negativo.";
+  return {LL,IP,LP,err};
+}
+function drawPoint(){
+  const p=readPoint(),g=$("pt");
+  if(p.err){g.style.display="none";$("ro").className="ro"+(p.err==="empty"?"":" warn");$("ro").textContent=p.err==="empty"?"Informe LL e IP ou clique no gráfico.":p.err;return null;}
+  const cx=X(Math.min(p.LL,XM)),cy=Y(Math.min(p.IP,YM));
+  g.style.display="";g.setAttribute("transform",`translate(${cx} ${cy})`);
+  $("gx").setAttribute("y2",Y(0)-cy);$("gy").setAttribute("x2",X(0)-cx);
+  const a=Math.max(A(p.LL),0),sym=chartSym(p.LL,p.IP);
+  let t=`Linha A em LL = ${fmt(p.LL)}: IP = ${fmt(a)}. Ponto ${p.IP>=A(p.LL)?"acima":"abaixo"} da linha A. Na carta: ${sym}.`;
+  if(p.IP>U(p.LL)&&p.LL>=16)t+=" Atenção: ponto acima da linha U, verifique os ensaios.";
+  if(p.LL>XM||p.IP>YM)t+=" Fora da área exibida.";
+  $("ro").className="ro";$("ro").textContent=t;
+  return p;
+}
+const fmt=v=>(+v.toFixed(1)).toLocaleString("pt-BR");
+function setMode(v){mode=v;const a=v==="ip";$("ip").disabled=!a||!chartOn();$("lp").disabled=a||!chartOn();}
+document.querySelectorAll('input[name=mode]').forEach(r=>r.onchange=e=>{setMode(e.target.value);onChart()});
+["ll","ip","lp"].forEach(id=>$(id).addEventListener("input",onChart));
+function fromPointer(e){
+  const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;
+  const q=p.matrixTransform(svg.getScreenCTM().inverse());
+  const ll=Math.min(Math.max((q.x-m.l)/(W-m.l-m.r)*XM,0.1),XM), ip=Math.min(Math.max((H-m.b-q.y)/(H-m.t-m.b)*YM,0),YM);
+  $("ll").value=+ll.toFixed(1);
+  if(mode==="ip")$("ip").value=+ip.toFixed(1);else $("lp").value=+(ll-ip).toFixed(1);
+  onChart();
+}
+let drag=false;
+svg.addEventListener("pointerdown",e=>{if(!chartOn())return;drag=true;svg.setPointerCapture(e.pointerId);fromPointer(e)});
+svg.addEventListener("pointermove",e=>{if(drag)fromPointer(e)});
+svg.addEventListener("pointerup",()=>drag=false);
+
+/* ---------- estado e lógica do caminho ---------- */
+const ORDER=["g","fr","fi","gr","at","ll","fn","pt"];
+let s={};
+function reset(){s={g:null,fr:null,fi:null,gr:null,at:null,ll:null,fn:null,pt:null,cht:false,atc:false,fnAllow:null,cu:null};}
+reset();
+function seq(){
+  const q=["g"];
+  if(s.g==="G"){q.push("fr","fi");if(s.fi==="lt5")q.push("gr");else if(s.fi==="gt12")q.push("at");else if(s.fi==="512")q.push("gr","at");}
+  else if(s.g==="F")q.push("ll","fn");
+  else if(s.g==="Pt")q.push("pt");
+  return q;
+}
+const current=()=>seq().find(f=>s[f]==null)||null;
+const ctxOf=f=>["fi","gr","at"].includes(f)?s.fr:f==="fn"?s.ll:undefined;
+const parse=k=>{const [fv,c]=k.split("@");const [f,v]=fv.split(":");return {f,v,c};};
+function options(f){
+  const c=ctxOf(f),at=c?"@"+c:"";
+  switch(f){
+    case"g":return["g:G","g:F","g:Pt"];
+    case"fr":return["fr:G","fr:S"];
+    case"fi":return["lt5","gt12","512"].map(v=>`fi:${v}${at}`);
+    case"gr":return[`gr:W${at}`,`gr:P${at}`];
+    case"at":return[`at:M${at}`,`at:C${at}`].concat(s.fi==="gt12"?[`at:CM${at}`]:[]);
+    case"ll":return["ll:L","ll:H"];
+    case"fn":return (s.fnAllow||["M","C","O"]).map(v=>`fn:${v}${at}`);
+    case"pt":return["pt:1"];
+  }
+  return[];
+}
+function isSel(k){
+  const {f,v,c}=parse(k);
+  if(f==="fn"&&s.fn==="CM"&&c==="L"&&(v==="C"||v==="M"))return true;
+  return s[f]===v&&(c===undefined||c===ctxOf(f));
+}
+function clickable(k){
+  const {f}=parse(k),q=seq(),cur=current(),i=q.indexOf(f);
+  if(i<0)return false;
+  if(cur&&i>q.indexOf(cur))return false;
+  return options(f).includes(k)||isSel(k);
+}
+function clearFrom(f){
+  const i=ORDER.indexOf(f);
+  ORDER.slice(i).forEach(x=>s[x]=null);
+  if(i<=ORDER.indexOf("at"))s.atc=false;
+  if(i<=ORDER.indexOf("ll")){s.cht=false;s.fnAllow=null;}
+  if(i<=ORDER.indexOf("gr"))s.cu=null;
+}
+function pick(k){
+  if(!clickable(k))return;
+  const {f,v}=parse(k);
+  if(isSel(k)){clearFrom(f);if(f==="fn"&&s.cht&&!s.fnAllow){s.cht=false;}render();return;}
+  clearFrom(f);s[f]=v;
+  if(f==="gr"&&s.cuPending)s.cu=s.cuPending;
+  render();
+}
+document.addEventListener("click",e=>{const el=e.target.closest("[data-n]");if(el)pick(el.dataset.n);});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.matches("td[data-n]")){e.preventDefault();pick(e.target.dataset.n);}});
+
+function chartOn(){
+  if(s.g==="F")return true;
+  if(s.g==="G"){const q=seq(),i=q.indexOf("at");if(i>=0)return q.slice(0,i).every(f=>s[f]!=null);}
+  return false;
+}
+function onChart(){
+  const p=drawPoint();
+  if(p&&chartOn()){
+    const acima=p.IP>=A(p.LL);
+    if(s.g==="F"){
+      clearFrom("ll");s.ll=p.LL<50?"L":"H";s.cht=true;
+      if(acima&&p.IP>=4){s.fn=p.IP<=7?"CM":"C";}
+      else s.fnAllow=["M","O"];
+    }else{
+      clearFrom("at");s.atc=true;
+      s.at=acima&&p.IP>7?"C":acima&&p.IP>=4?(s.fi==="gt12"?"CM":"C"):"M";
+    }
+    s.pLL=p.LL;s.pIP=p.IP;
+  }
+  render();
+}
+
+/* ---------- resultado ---------- */
+const NAME={GW:"Pedregulho bem graduado",GP:"Pedregulho mal graduado",GM:"Pedregulho siltoso",GC:"Pedregulho argiloso","GC-GM":"Pedregulho silto-argiloso",
+ "GW-GM":"Pedregulho bem graduado com silte","GW-GC":"Pedregulho bem graduado com argila","GP-GM":"Pedregulho mal graduado com silte","GP-GC":"Pedregulho mal graduado com argila",
+ SW:"Areia bem graduada",SP:"Areia mal graduada",SM:"Areia siltosa",SC:"Areia argilosa","SC-SM":"Areia silto-argilosa",
+ "SW-SM":"Areia bem graduada com silte","SW-SC":"Areia bem graduada com argila","SP-SM":"Areia mal graduada com silte","SP-SC":"Areia mal graduada com argila",
+ ML:"Silte inorgânico de baixa plasticidade",CL:"Argila inorgânica de baixa a média plasticidade",OL:"Silte ou argila orgânica de baixa plasticidade",
+ MH:"Silte inorgânico de alta plasticidade",CH:"Argila inorgânica de alta plasticidade",OH:"Argila orgânica de média a alta plasticidade",
+ "CL-ML":"Argila siltosa / silte argiloso",Pt:"Turfa (solo altamente orgânico)"};
+function result(){
+  if(current()||!s.g)return null;
+  const L=s.fr;
+  if(s.g==="G"){
+    if(s.fi==="lt5")return{sym:L+s.gr,cells:[L+s.gr]};
+    if(s.fi==="gt12")return s.at==="CM"?{sym:`${L}C-${L}M`,cells:[L+"C",L+"M"]}:{sym:L+s.at,cells:[L+s.at]};
+    return{sym:`${L}${s.gr}-${L}${s.at}`,cells:[L+s.gr,L+s.at]};
+  }
+  if(s.g==="F")return s.fn==="CM"?{sym:"CL-ML",cells:["CL","ML"]}:{sym:s.fn+s.ll,cells:[s.fn+s.ll]};
+  return{sym:"Pt",cells:["Pt"]};
+}
+function trail(){
+  const out=[],sand=s.fr==="S",pt=`LL = ${fmt(s.pLL||0)}, IP = ${fmt(s.pIP||0)}`;
+  for(const f of seq()){
+    const v=s[f];if(v==null)break;
+    if(f==="g")out.push({G:"Solo grosso: mais de 50% fica retido na peneira nº 200",F:"Solo fino: mais de 50% passa na peneira nº 200",Pt:"Solo altamente orgânico"}[v]);
+    if(f==="fr")out.push(v==="G"?"Pedregulho: mais de 50% da fração grossa fica retida na nº 4":"Areia: mais de 50% da fração grossa passa na nº 4");
+    if(f==="fi")out.push({lt5:"Menos de 5% passa na nº 200",gt12:"Mais de 12% passa na nº 200",512:"Entre 5% e 12% passa na nº 200: caso de fronteira, símbolo duplo"}[v]);
+    if(f==="gr")out.push((v==="W"?`Bem graduado: Cu ≥ ${sand?6:4} e 1 ≤ Cc ≤ 3`:"Mal graduado: não atende aos critérios de Cu e Cc")+(s.cu?` (Cu = ${fmt(s.cu.Cu)}, Cc = ${fmt(s.cu.Cc)})`:""));
+    if(f==="at")out.push({M:"Finos siltosos: abaixo da linha A ou IP < 4",C:"Finos argilosos: acima da linha A e IP > 7",CM:"Finos acima da linha A com 4 ≤ IP ≤ 7: fronteira"}[v]+(s.atc?` (carta: ${pt})`:""));
+    if(f==="ll"){out.push(v==="L"?"LL < 50: baixa plasticidade":"LL ≥ 50: alta plasticidade");if(s.cht)out.push(`Carta de plasticidade: ${pt}, ${s.pIP>=A(s.pLL)?"acima":"abaixo"} da linha A (IP da linha A = ${fmt(Math.max(A(s.pLL),0))})`);}
+    if(f==="fn")out.push({M:"Silte inorgânico (M)",C:"Argila inorgânica (C)",O:"Solo orgânico (O)",CM:"Faixa hachurada CL-ML (4 ≤ IP ≤ 7)"}[v]);
+    if(f==="pt")out.push("Turfa: LL > 300% e IP > 100%");
+  }
+  return out;
+}
+const PROMPT={
+  g:"Escolha o grupo: solo grosso (+50% retido na #200), fino (+50% passa na #200) ou altamente orgânico.",
+  fr:"Pedregulho ou areia? Veja se a maior parte da fração grossa fica retida ou passa na peneira nº 4.",
+  fi:"Quanto passa na peneira nº 200? Escolha na coluna Observações.",
+  gr:"A curva granulométrica atende aos critérios de Cu e Cc? Escolha a linha W ou P, ou calcule abaixo.",
+  at:"Como são os finos? Escolha pelo critério de Atterberg ou marque LL e IP dos finos na carta.",
+  ll:"Marque LL e IP na carta de plasticidade, ou escolha LL < 50 ou LL > 50 na tabela.",
+  fn:"Escolha o símbolo na coluna Símb.",
+  pt:"Confirme a turfa clicando em Pt."
+};
+function render(){
+  const cur=current(),q=seq();
+  document.querySelectorAll("[data-n]").forEach(el=>{
+    const k=el.dataset.n,sel=isSel(k),ok=clickable(k),{f}=parse(k);
+    el.classList.toggle("sel",sel);
+    el.classList.toggle("nx",!sel&&ok&&f===cur);
+    el.classList.toggle("alt",!sel&&ok&&f!==cur);
+    el.classList.toggle("off",!sel&&!ok);
+    if(el.tagName==="BUTTON")el.tabIndex=ok?0:-1;
+    else if(el.hasAttribute("role"))el.tabIndex=ok?0:-1;
+  });
+  const r=result();
+  document.querySelectorAll("[data-s]").forEach(el=>el.classList.toggle("res",!!r&&r.cells.includes(el.dataset.s)));
+  /* carta */
+  const on=chartOn(),cc=$("chartcell");
+  cc.classList.toggle("off",!on);
+  cc.classList.toggle("sel",on&&(s.cht||s.atc));
+  cc.classList.toggle("nx",on&&!(s.cht||s.atc)&&["ll","fn","at"].includes(cur));
+  $("ll").disabled=!on;setMode(mode);
+  document.querySelectorAll('input[name=mode]').forEach(i=>i.disabled=!on);
+  $("ctx").textContent=s.g==="G"&&on?"aplicada aos finos do solo grosso":"";
+  /* passo */
+  const n=q.indexOf(cur)+1;
+  $("stepn").textContent=cur?`Passo ${n}`:"Classificação concluída";
+  let pr=cur?PROMPT[cur]:"Clique numa opção escolhida para voltar daquele ponto, ou recomece.";
+  if(cur==="fn"&&s.fnAllow)pr=`O ponto ficou ${s.pIP>=A(s.pLL)?"na região de IP < 4":"abaixo da linha A"}: escolha ${s.ll==="L"?"ML (inorgânico) ou OL":"MH (inorgânico) ou OH"} (orgânico). Razão LL seco em estufa / LL natural < 0,75 indica solo orgânico.`;
+  $("prompt").textContent=pr;
+  $("calc").hidden=cur!=="gr";
+  if(cur==="gr")calcCu();
+  /* resultado */
+  const t=trail();
+  let h="";
+  if(r){
+    const des=r.cells.map(c=>DES[c]).join(" + ");
+    h=`<p class="step">Resultado</p><div class="symbig">${r.sym}</div><div class="rname">${NAME[r.sym]||""}</div><p class="rdes">${des}</p>`;
+  }else h=`<p class="step">Caminho</p>`+(t.length?"":`<p class="rdes" style="margin:0">Nenhuma escolha ainda.</p>`);
+  if(t.length)h+=`<ol class="trail">${t.map(x=>`<li>${x}</li>`).join("")}</ol>`;
+  if(r&&s.fi==="512")h+=`<div class="note">Entre 5% e 12% de finos o SUCS usa símbolo duplo: o primeiro indica a graduação e o segundo, o tipo de finos.</div>`;
+  if(r&&/C-.M/.test(r.sym))h+=`<div class="note">Finos na faixa 4 ≤ IP ≤ 7 acima da linha A: caso de fronteira com dois símbolos.</div>`;
+  if(r&&/^O/.test(s.fn||""))h+=`<div class="note">Confirme o caráter orgânico pela razão LL seco em estufa / LL natural (&lt; 0,75), cor escura e odor.</div>`;
+  h+=`<div class="actions"><button class="btn" id="rst" ${s.g?"":"disabled"}>Recomeçar</button></div>`;
+  $("result").innerHTML=h;
+  $("rst").onclick=()=>{reset();render();};
+  $("chip").textContent=r?`Resultado: ${r.sym} ↑`:"";
+  chipVis();
+  requestAnimationFrame(drawPath);
+}
+
+/* ---------- Cu e Cc ---------- */
+function calcCu(){
+  const d10=+$("d10").value,d30=+$("d30").value,d60=+$("d60").value;
+  s.cuPending=null;
+  if(!(d10>0&&d30>0&&d60>0)){$("cuout").textContent="Opcional: informe os diâmetros para calcular Cu e Cc.";$("cuapply").disabled=true;return;}
+  const Cu=d60/d10,Cc=d30*d30/(d60*d10),lim=s.fr==="S"?6:4,w=Cu>=lim&&Cc>=1&&Cc<=3;
+  s.cuPending={Cu,Cc,w};
+  $("cuout").innerHTML=`Cu = <b>${fmt(Cu)}</b> (${Cu>=lim?"≥":"<"} ${lim}) · Cc = <b>${fmt(Cc)}</b> (${Cc>=1&&Cc<=3?"entre 1 e 3":"fora de 1 a 3"})<br>${w?"Bem graduado":"Mal graduado"} → ${s.fr}${w?"W":"P"}`;
+  $("cuapply").disabled=false;
+}
+["d10","d30","d60"].forEach(id=>$(id).addEventListener("input",calcCu));
+$("cuapply").onclick=()=>{if(s.cuPending)pick(`gr:${s.cuPending.w?"W":"P"}@${s.fr}`);};
+
+/* ---------- desenho do caminho ---------- */
+let lastSig="";
+function anchorsList(){
+  const st=$("stage"),b=st.getBoundingClientRect();
+  const c=el=>{const r=el.getBoundingClientRect();return{x:r.left-b.left+r.width/2,y:r.top-b.top+r.height/2,el};};
+  const pts=[];
+  for(const f of seq()){
+    const v=s[f];if(v==null)break;
+    if(f==="at"&&s.atc)pts.push(c($("ptc")));
+    if(!(f==="fn"&&v==="CM")){const ctx=ctxOf(f),k=`${f}:${v}${ctx?"@"+ctx:""}`;const el=document.querySelector(`[data-n="${k}"][data-a]`);if(el)pts.push(c(el));}
+    if(f==="ll"&&s.cht)pts.push(c($("ptc")));
+  }
+  const r=result(),ends=[];
+  if(r)r.cells.forEach(sym=>{const el=document.querySelector(`[data-s="${sym}"]`);if(el&&!pts.some(p=>p.el===el))ends.push(c(el));});
+  return{pts,ends,w:st.offsetWidth,h:st.offsetHeight};
+}
+function drawPath(){
+  const {pts,ends,w,h}=anchorsList(),P=$("path");
+  P.setAttribute("width",w);P.setAttribute("height",h);P.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  let d=pts.map((p,i)=>`${i?"L":"M"}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const last=pts[pts.length-1];
+  if(last)ends.forEach(e=>d+=` M${last.x.toFixed(1)} ${last.y.toFixed(1)} L${e.x.toFixed(1)} ${e.y.toFixed(1)}`);
+  let g=`<path class="ln" d="${d}"/>`;
+  ends.forEach(e=>g+=`<circle class="ring" cx="${e.x}" cy="${e.y}" r="17"/>`);
+  pts.forEach((p,i)=>g+=`<g class="dot"><circle cx="${p.x}" cy="${p.y}" r="10"/><text x="${p.x}" y="${p.y}">${i+1}</text></g>`);
+  P.innerHTML=g;
+  const sig=d.replace(/\.\d/g,"");
+  if(sig!==lastSig&&d){
+    const ln=P.querySelector(".ln"),L=ln.getTotalLength(),prev=lastSig?Math.min(L,prevLen):0;
+    if(!matchMedia("(prefers-reduced-motion: reduce)").matches&&L>prev){
+      ln.style.strokeDasharray=L;ln.style.strokeDashoffset=L-prev;ln.getBoundingClientRect();
+      ln.style.transition="stroke-dashoffset .45s ease-out";ln.style.strokeDashoffset=0;
+    }
+    prevLen=L;
+  }
+  if(!d)prevLen=0;
+  lastSig=sig;
+}
+let prevLen=0;
+new ResizeObserver(()=>{lastSig="";drawPathStatic();}).observe($("stage"));
+function drawPathStatic(){const keep=prevLen;drawPath();prevLen=keep;const ln=$("path").querySelector(".ln");if(ln){ln.style.transition="none";ln.style.strokeDasharray="";ln.style.strokeDashoffset="";}}
+
+/* ---------- atalho para o resultado ---------- */
+let sideVisible=true;
+new IntersectionObserver(es=>{sideVisible=es[0].isIntersecting;chipVis();}).observe($("result"));
+function chipVis(){$("chip").style.display=result()&&!sideVisible?"block":"none";}
+$("chip").onclick=()=>$("result").scrollIntoView({behavior:"smooth",block:"center"});
+
+render();
+</script>
+</body>
+</html>
